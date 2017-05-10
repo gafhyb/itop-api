@@ -1,0 +1,13 @@
+{
+  "name": "gafhyb/itop-api",
+  "type": "library",
+  "autoload": {
+    "psr-0": {
+      "gafhyb": "src/php"
+    }
+  },
+  "require": {
+  },
+  "require-dev": {
+  }
+}
