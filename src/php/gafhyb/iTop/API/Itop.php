@@ -1,4 +1,5 @@
 <?php
+
 namespace gafhyb\iTop\API;
 /**
  * User: virgile
@@ -22,13 +23,13 @@ class Itop
      */
     public static function get($className, $key, $outputFields = "*")
     {
-        return self::exec("core/get", $className, $key, null, $outputFields, null);
+        return self::exec_objects("core/get", $className, $key, null, $outputFields, null);
     }
 
     /**
-     * @param string $className class of new instance
-     * @param string $key query
-     * @param array $values values for fields
+     * @param $className string class of new instance
+     * @param $key string query
+     * @param $values array values for fields
      * @return boolean|stdClass
      */
     public static function findOrCreate($className, $key, $values)
@@ -67,10 +68,10 @@ class Itop
 
     /**
      * Creates object
-     * @param string $className class of new instance
-     * @param array $fields values for fields
-     * @param string $outputFields
-     * @param string $comment
+     * @param $className string class of new instance
+     * @param $fields array values for fields
+     * @param $outputFields string
+     * @param $comment string
      * @return string iTop response
      */
     public
@@ -78,22 +79,22 @@ class Itop
     {
         echo "Will try to create $className";
 
-        return self::exec("core/create", $className, null, $fields, $outputFields, $comment);
+        return self::exec_objects("core/create", $className, null, $fields, $outputFields, $comment);
     }
 
     /**
      * Updates object
-     * @param string $className class of the instance tu update
-     * @param string $key key of instance
-     * @param array $fields values for fields
-     * @param string $outputFields
-     * @param string $comment
+     * @param $className string class of the instance tu update
+     * @param $key string key of instance
+     * @param $fields array values for fields
+     * @param $outputFields string $outputFields
+     * @param $comment string
      * @return string iTop response
      */
     public
     static function update($className, $key, $fields, $outputFields = "*", $comment = "")
     {
-        return self::exec("core/update", $className, $key, $fields, $outputFields, $comment);
+        return self::exec_objects("core/update", $className, $key, $fields, $outputFields, $comment);
     }
 
     /**
@@ -104,27 +105,45 @@ class Itop
      */
     public static function delete($className, $key)
     {
-        return self::exec("core/delete", $className, $key, null, null, null);
+        return self::exec_objects("core/delete", $className, $key, null, null, null);
     }
 
     /**
      * Executes a query
-     * @param string $operation name of operation
-     * @param string $className name of class to query
-     * @param string $key
-     * @param string $fields
-     * @param string $outputFields
-     * @param $comment
+     * @param $classNamestring name of class to query
+     * @param $key string
+     * @param $relation string
+     * @param $depth integer
+     * @return string iTop response
+     */
+    public
+    static function getRelated($className, $key, $relation = "impacts", $depth=4, $redundancy = true, $direction="down")
+    {
+        $operation = "core/get_related";
+        $vars = array();
+        $vars["key"] = $key;
+        $vars["relation"] = $relation;
+        $vars["depth"] = $depth;
+        $vars["redundancy"] = $redundancy;
+        $vars["direction"] = $direction;
+
+        return self::exec($operation, $className, $vars);
+    }
+
+    /**
+     * Executes a query
+     * @param $operation string name of operation
+     * @param $className string name of class to query
+     * @param $key string
+     * @param $fields string
+     * @param $outputFields string
+     * @param $comment string
      * @return string iTop response
      */
     private
-    static function exec($operation, $className, $key, $fields = "*", $outputFields = "*", $comment)
+    static function exec_objects($operation, $className, $key, $fields = "*", $outputFields = "*", $comment)
     {
-        $url = Config::getConfig()->getServerUrl() . self::$urlSuffix;
-
         $vars = array();
-        $vars["operation"] = $operation;
-        $vars["class"] = $className;
         if (isset($key)) $vars["key"] = $key;
         $vars["output_fields"] = $outputFields;
         if (isset($fields)) $vars["fields"] = $fields;
@@ -134,7 +153,30 @@ class Itop
         }
         $vars["comment"] = $c;
 
-        $jsonData = json_encode($vars);
+        return self::exec($operation, $className, $vars);
+    }
+
+
+    /**
+     * Executes a query
+     * @param $operation string name of operation
+     * @param $className string name of class to query
+     * @param $other array
+     * @return string iTop response
+     */
+    private
+    static function exec($operation, $className, $other)
+    {
+        $url = Config::getConfig()->getServerUrl() . self::$urlSuffix;
+
+        $vars = array();
+        $vars["operation"] = $operation;
+        $vars["class"] = $className;
+
+        $arr = array_merge($vars, $other);
+
+
+        $jsonData = json_encode($arr);
 
         //var_dump($jsonData);
 
